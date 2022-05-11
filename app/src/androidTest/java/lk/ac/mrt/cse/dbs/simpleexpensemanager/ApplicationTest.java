@@ -16,14 +16,51 @@
 
 package lk.ac.mrt.cse.dbs.simpleexpensemanager;
 
-import android.app.Application;
-import android.test.ApplicationTestCase;
+import android.content.Context;
 
-/**
- * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
- */
-public class ApplicationTest extends ApplicationTestCase<Application> {
-    public ApplicationTest() {
-        super(Application.class);
+import androidx.test.core.app.ApplicationProvider;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.ExpenseManager;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.PersistentExpenseManager;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.exception.InvalidAccountException;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
+
+import static org.junit.Assert.assertTrue;
+
+public class ApplicationTest {
+    private ExpenseManager expenseManager;
+
+    @Before
+    public void setUp() {
+        Context context = ApplicationProvider.getApplicationContext();
+        expenseManager = new PersistentExpenseManager(context);
+    }
+
+    @Test
+    public void testAddAccount() {
+
+        expenseManager.addAccount("1234ABC", "BOC", "Samindra", 150.0);
+        List<String> accNumbers = expenseManager.getAccountNumbersList();
+        assertTrue(accNumbers.contains("1234ABC"));
+    }
+    @Test
+    public void testUpdateAccBalance() throws InvalidAccountException {
+        expenseManager.addAccount("1234ABC", "BOC", "Samindra", 150.0);
+        expenseManager.updateAccountBalance("1234ABC", 11, 4, 2022, ExpenseType.valueOf("EXPENSE"), "50.0");
+        List<Transaction> transactionLogs = expenseManager.getTransactionLogs();
+        Transaction LastTransaction = transactionLogs.get(transactionLogs.size() - 1);
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        String strDate = dateFormat.format(LastTransaction.getDate());
+        assertTrue(strDate.equals("11-05-2022") && LastTransaction.getAccountNo().equals("1234ABC") && LastTransaction.getExpenseType().toString().equals("EXPENSE") && LastTransaction.getAmount() ==  50.0);
     }
 }
